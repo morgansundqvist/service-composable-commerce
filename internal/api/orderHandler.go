@@ -46,6 +46,18 @@ func (h *OrderHandler) GetOrderByID(c *fiber.Ctx) error {
 	return c.JSON(order)
 }
 
+func (h *OrderHandler) GetOrderDetailsBySessionId(c *fiber.Ctx) error {
+	sessionId := c.Params("sessionId")
+	orderDetails, err := h.orderService.GetOrderDetailsBySessionId(sessionId)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	return c.JSON(orderDetails)
+}
+
 func (h *OrderHandler) UpdateOrder(c *fiber.Ctx) error {
 	id := c.Params("id")
 	var input domain.UpdateOrderInput

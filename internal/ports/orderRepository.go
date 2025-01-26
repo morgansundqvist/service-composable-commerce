@@ -16,4 +16,7 @@ type OrderRepository interface {
 	DeleteOrderLine(id uuid.UUID) error
 	CreateOrderLineContentLine(contentLine *domain.OrderLineContentLine) (*domain.OrderLineContentLine, error)
 	DeleteOrderLineContentLine(id uuid.UUID) error
+	GetOrderBySessionId(sessionId string) (*domain.Order, error)
+	GetOrderLinesByOrderId(orderId uuid.UUID) ([]*domain.OrderLine, error)
+	GetOrderLineContentLinesByOrderLineId(orderLineId uuid.UUID) ([]*domain.OrderLineContentLine, error)
 }

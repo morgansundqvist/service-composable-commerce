@@ -23,5 +23,7 @@ func SetupRouter(productHandler *ProductHandler, orderHandler *OrderHandler) *fi
 	app.Patch("/api/orders/:id", orderHandler.UpdateOrder)
 	app.Delete("/api/orders/:id", orderHandler.DeleteOrder)
 
+	app.Get("/api/session/:id/order", orderHandler.GetOrderDetailsBySessionId)
+
 	return app
 }

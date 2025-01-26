@@ -75,6 +75,25 @@ func toDomainOrder(dbOrder *DBOrder) *domain.Order {
 	}
 }
 
+func toDomainOrderLine(dbOrderLine *DBOrderLine) *domain.OrderLine {
+	return &domain.OrderLine{
+		ID:        dbOrderLine.ID,
+		OrderID:   dbOrderLine.OrderID,
+		ProductID: dbOrderLine.ProductID,
+		Price:     dbOrderLine.Price,
+		Quantity:  dbOrderLine.Quantity,
+	}
+}
+
+func toDomainOrderLineContentLine(dbOrderLineContentLine *DBOrderLineContentLine) *domain.OrderLineContentLine {
+	return &domain.OrderLineContentLine{
+		ID:          dbOrderLineContentLine.ID,
+		OrderLineID: dbOrderLineContentLine.OrderLineID,
+		ProductID:   dbOrderLineContentLine.ProductID,
+		Quantity:    dbOrderLineContentLine.Quantity,
+	}
+}
+
 func (r *GormSLOrderRepository) CreateOrder(order *domain.Order) (*domain.Order, error) {
 	dbOrder := toDBOrder(order)
 	if err := r.db.Create(dbOrder).Error; err != nil {
@@ -111,13 +130,7 @@ func (r *GormSLOrderRepository) CreateOrderLine(orderLine *domain.OrderLine) (*d
 	if err := r.db.Create(dbOrderLine).Error; err != nil {
 		return nil, err
 	}
-	return &domain.OrderLine{
-		ID:        dbOrderLine.ID,
-		OrderID:   dbOrderLine.OrderID,
-		ProductID: dbOrderLine.ProductID,
-		Price:     dbOrderLine.Price,
-		Quantity:  dbOrderLine.Quantity,
-	}, nil
+	return toDomainOrderLine(dbOrderLine), nil
 }
 
 func (r *GormSLOrderRepository) UpdateOrderLine(orderLine *domain.OrderLine) error {
@@ -136,13 +149,7 @@ func (r *GormSLOrderRepository) GetOrderLineById(id uuid.UUID) (*domain.OrderLin
 	if err := r.db.Where("id = ?", id).First(&dbOrderLine).Error; err != nil {
 		return nil, err
 	}
-	return &domain.OrderLine{
-		ID:        dbOrderLine.ID,
-		OrderID:   dbOrderLine.OrderID,
-		ProductID: dbOrderLine.ProductID,
-		Price:     dbOrderLine.Price,
-		Quantity:  dbOrderLine.Quantity,
-	}, nil
+	return toDomainOrderLine(&dbOrderLine), nil
 }
 
 func (r *GormSLOrderRepository) DeleteOrderLine(id uuid.UUID) error {
@@ -159,14 +166,41 @@ func (r *GormSLOrderRepository) CreateOrderLineContentLine(contentLine *domain.O
 	if err := r.db.Create(dbOrderLineContentLine).Error; err != nil {
 		return nil, err
 	}
-	return &domain.OrderLineContentLine{
-		ID:          dbOrderLineContentLine.ID,
-		OrderLineID: dbOrderLineContentLine.OrderLineID,
-		ProductID:   dbOrderLineContentLine.ProductID,
-		Quantity:    dbOrderLineContentLine.Quantity,
-	}, nil
+	return toDomainOrderLineContentLine(dbOrderLineContentLine), nil
 }
 
 func (r *GormSLOrderRepository) DeleteOrderLineContentLine(id uuid.UUID) error {
 	return r.db.Delete(&DBOrderLineContentLine{}, id).Error
+}
+
+func (r *GormSLOrderRepository) GetOrderBySessionId(sessionId string) (*domain.Order, error) {
+	var dbOrder DBOrder
+	if err := r.db.Where("session_id = ?", sessionId).First(&dbOrder).Error; err != nil {
+		return nil, err
+	}
+	return toDomainOrder(&dbOrder), nil
+}
+
+func (r *GormSLOrderRepository) GetOrderLinesByOrderId(orderId uuid.UUID) ([]*domain.OrderLine, error) {
+	var dbOrderLines []DBOrderLine
+	if err := r.db.Where("order_id = ?", orderId).Find(&dbOrderLines).Error; err != nil {
+		return nil, err
+	}
+	orderLines := make([]*domain.OrderLine, len(dbOrderLines))
+	for i, dbOrderLine := range dbOrderLines {
+		orderLines[i] = toDomainOrderLine(&dbOrderLine)
+	}
+	return orderLines, nil
+}
+
+func (r *GormSLOrderRepository) GetOrderLineContentLinesByOrderLineId(orderLineId uuid.UUID) ([]*domain.OrderLineContentLine, error) {
+	var dbOrderLineContentLines []DBOrderLineContentLine
+	if err := r.db.Where("order_line_id = ?", orderLineId).Find(&dbOrderLineContentLines).Error; err != nil {
+		return nil, err
+	}
+	contentLines := make([]*domain.OrderLineContentLine, len(dbOrderLineContentLines))
+	for i, dbOrderLineContentLine := range dbOrderLineContentLines {
+		contentLines[i] = toDomainOrderLineContentLine(&dbOrderLineContentLine)
+	}
+	return contentLines, nil
 }
