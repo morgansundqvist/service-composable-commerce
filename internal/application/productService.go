@@ -11,6 +11,26 @@ type ProductService struct {
 	logger            ports.Logger
 }
 
+type DTOProductGroupDetails struct {
+	ProductGroup domain.ProductGroup `json:"product_group"`
+}
+
+type DTOProductDetails struct {
+	Product domain.Product `json:"product"`
+}
+
+type DTOProductGroupList struct {
+	ProductGroups []domain.ProductGroup `json:"product_groups"`
+}
+
+type DTOProductList struct {
+	Products []domain.Product `json:"products"`
+}
+
+type DTOProductGroupWithProducts struct {
+	ProductGroups []domain.ProductGroupWithProducts `json:"product_groups"`
+}
+
 func NewProductService(productRepository ports.ProductRepository, logger ports.Logger) *ProductService {
 	return &ProductService{
 		productRepository: productRepository,
@@ -18,7 +38,7 @@ func NewProductService(productRepository ports.ProductRepository, logger ports.L
 	}
 }
 
-func (s *ProductService) GetProductGroups() ([]domain.ProductGroup, error) {
+func (s *ProductService) GetProductGroups() (*DTOProductGroupList, error) {
 	productGroups, err := s.productRepository.ListProductGroups()
 	if err != nil {
 		s.logger.Error("failed to get product groups", map[string]interface{}{
@@ -27,36 +47,32 @@ func (s *ProductService) GetProductGroups() ([]domain.ProductGroup, error) {
 		return nil, err
 	}
 
-	return productGroups, nil
+	return &DTOProductGroupList{ProductGroups: productGroups}, nil
 }
 
-func (s *ProductService) CreateProductGroup(productGroupInput domain.CreateProductGroupInput) (*domain.ProductGroup, error) {
+func (s *ProductService) CreateProductGroup(productGroupInput domain.CreateProductGroupInput) (*DTOProductGroupDetails, error) {
 	productGroup, err := domain.CreateProductGroup(productGroupInput)
 	if err != nil {
 		return nil, err
 	}
 
 	err = s.productRepository.CreateProductGroup(productGroup)
-
 	if err != nil {
 		s.logger.Error("failed to create product group", map[string]interface{}{
 			"error": err,
 		})
-
 		return nil, err
 	}
 
-	return productGroup, nil
+	return &DTOProductGroupDetails{ProductGroup: *productGroup}, nil
 }
 
-func (s *ProductService) GetProductGroupByID(id string) (*domain.ProductGroup, error) {
-
+func (s *ProductService) GetProductGroupByID(id string) (*DTOProductGroupDetails, error) {
 	uuidId, err := uuid.Parse(id)
 	if err != nil {
 		s.logger.Error("failed to parse UUID", map[string]interface{}{
 			"error": err,
 		})
-
 		return nil, err
 	}
 
@@ -68,10 +84,10 @@ func (s *ProductService) GetProductGroupByID(id string) (*domain.ProductGroup, e
 		return nil, err
 	}
 
-	return productGroup, nil
+	return &DTOProductGroupDetails{ProductGroup: *productGroup}, nil
 }
 
-func (s *ProductService) CreateProduct(productInput domain.CreateProductInput) (*domain.Product, error) {
+func (s *ProductService) CreateProduct(productInput domain.CreateProductInput) (*DTOProductDetails, error) {
 	product, err := domain.CreateProduct(productInput)
 	if err != nil {
 		return nil, err
@@ -85,10 +101,10 @@ func (s *ProductService) CreateProduct(productInput domain.CreateProductInput) (
 		return nil, err
 	}
 
-	return product, nil
+	return &DTOProductDetails{Product: *product}, nil
 }
 
-func (s *ProductService) UpdateProduct(id string, productInput domain.UpdateProductInput) (*domain.Product, error) {
+func (s *ProductService) UpdateProduct(id string, productInput domain.UpdateProductInput) (*DTOProductDetails, error) {
 	uuidId, err := uuid.Parse(id)
 	if err != nil {
 		s.logger.Error("failed to parse UUID", map[string]interface{}{
@@ -118,7 +134,7 @@ func (s *ProductService) UpdateProduct(id string, productInput domain.UpdateProd
 		return nil, err
 	}
 
-	return product, nil
+	return &DTOProductDetails{Product: *product}, nil
 }
 
 func (s *ProductService) DeleteProduct(id string) error {
@@ -141,7 +157,7 @@ func (s *ProductService) DeleteProduct(id string) error {
 	return nil
 }
 
-func (s *ProductService) GetProductByID(id string) (*domain.Product, error) {
+func (s *ProductService) GetProductByID(id string) (*DTOProductDetails, error) {
 	uuidId, err := uuid.Parse(id)
 	if err != nil {
 		s.logger.Error("failed to parse UUID", map[string]interface{}{
@@ -158,10 +174,10 @@ func (s *ProductService) GetProductByID(id string) (*domain.Product, error) {
 		return nil, err
 	}
 
-	return product, nil
+	return &DTOProductDetails{Product: *product}, nil
 }
 
-func (s *ProductService) ListProducts() ([]domain.Product, error) {
+func (s *ProductService) ListProducts() (*DTOProductList, error) {
 	products, err := s.productRepository.ListProducts()
 	if err != nil {
 		s.logger.Error("failed to list products", map[string]interface{}{
@@ -170,5 +186,29 @@ func (s *ProductService) ListProducts() ([]domain.Product, error) {
 		return nil, err
 	}
 
-	return products, nil
+	return &DTOProductList{Products: products}, nil
+}
+
+func (s *ProductService) GetProductsByProductGroupID(id uuid.UUID) (*DTOProductList, error) {
+	products, err := s.productRepository.ListProductsByProductGroupID(id)
+	if err != nil {
+		s.logger.Error("failed to list products by product group ID", map[string]interface{}{
+			"error": err,
+		})
+		return nil, err
+	}
+
+	return &DTOProductList{Products: products}, nil
+}
+
+func (s *ProductService) GetProductGroupsWithProducts() (*DTOProductGroupWithProducts, error) {
+	productGroupsWithProducts, err := s.productRepository.ListProductGroupsWithProducts()
+	if err != nil {
+		s.logger.Error("failed to get product groups with products", map[string]interface{}{
+			"error": err,
+		})
+		return nil, err
+	}
+
+	return &DTOProductGroupWithProducts{ProductGroups: productGroupsWithProducts}, nil
 }

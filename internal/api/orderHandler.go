@@ -2,6 +2,7 @@ package api
 
 import (
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"github.com/morgansundqvist/service-composable-commerce/internal/application"
 	"github.com/morgansundqvist/service-composable-commerce/internal/domain"
 )
@@ -47,11 +48,23 @@ func (h *OrderHandler) GetOrderByID(c *fiber.Ctx) error {
 }
 
 func (h *OrderHandler) GetOrderDetailsBySessionId(c *fiber.Ctx) error {
-	sessionId := c.Params("sessionId")
+	sessionId := c.Params("id")
 	orderDetails, err := h.orderService.GetOrderDetailsBySessionId(sessionId)
 	if err != nil {
+		if err.Error() == "record not found" {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+				"error": "did not find order connected to session",
+			})
+		}
+
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": err.Error(),
+		})
+	}
+
+	if orderDetails.Order.Status != "created" {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"error": "did not find order with created status connected to session",
 		})
 	}
 
@@ -87,4 +100,24 @@ func (h *OrderHandler) DeleteOrder(c *fiber.Ctx) error {
 	}
 
 	return c.SendStatus(fiber.StatusNoContent)
+}
+
+func (h *OrderHandler) CreateSessionOrder(c *fiber.Ctx) error {
+	sessionId := c.Params("id")
+	uuidSessionId, err := uuid.Parse(sessionId)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+
+	}
+
+	order, err := h.orderService.CreateSessionOrder(uuidSessionId)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	return c.Status(fiber.StatusCreated).JSON(order)
 }

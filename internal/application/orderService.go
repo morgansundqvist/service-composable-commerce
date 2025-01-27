@@ -1,6 +1,8 @@
 package application
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/morgansundqvist/service-composable-commerce/internal/domain"
 	"github.com/morgansundqvist/service-composable-commerce/internal/ports"
@@ -204,4 +206,47 @@ type DTOOrderLineContentLine struct {
 	ProductID   uuid.UUID      `json:"product_id"`
 	Product     domain.Product `json:"product"`
 	Quantity    int            `json:"quantity"`
+}
+
+func (s *OrderService) CreateSessionOrder(sessionId uuid.UUID) (*domain.Order, error) {
+	createOrderInput := domain.CreateOrderInput{
+		SessionId: sessionId.String(),
+	}
+
+	order, err := s.CreateOrder(createOrderInput)
+	if err != nil {
+		s.logger.Error("failed to create session order", map[string]interface{}{
+			"error": err,
+		})
+		return nil, err
+	}
+
+	return order, nil
+}
+
+func (s *OrderService) RemoveOldCreatedOrders() error {
+	orders, err := s.orderRepository.GetOrderByStatus("created")
+	if err != nil {
+		s.logger.Error("failed to get orders by status", map[string]interface{}{
+			"error": err,
+		})
+
+		return err
+	}
+
+	for _, order := range orders {
+		if order.CreatedDateTime.Add(10 * time.Minute).Before(time.Now()) {
+			err = s.orderRepository.DeleteOrder(order.ID)
+			if err != nil {
+				s.logger.Error("failed to delete order", map[string]interface{}{
+					"error": err,
+				})
+				return err
+			}
+			s.logger.Info("deleted old created order", map[string]interface{}{
+				"order_id": order.ID,
+			})
+		}
+	}
+	return nil
 }

@@ -26,4 +26,8 @@ type ProductRepository interface {
 	GetProductGroup(productGroupID uuid.UUID) (*domain.ProductGroup, error)
 	// ListProductGroups retrieves all product groups
 	ListProductGroups() ([]domain.ProductGroup, error)
+	// ListProductsByProductGroupID retrieves all products by product group ID
+	ListProductsByProductGroupID(productGroupID uuid.UUID) ([]domain.Product, error)
+	// ListProductGroupsWithProducts retrieves all product groups with their products based on the specified conditions
+	ListProductGroupsWithProducts() ([]domain.ProductGroupWithProducts, error)
 }

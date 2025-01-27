@@ -34,3 +34,18 @@ func (l *LogrusLogger) Error(msg string, fields map[string]interface{}) {
 func (l *LogrusLogger) Fatal(msg string, fields map[string]interface{}) {
 	l.logger.WithFields(logrus.Fields(fields)).Fatal(msg)
 }
+
+func (l *LogrusLogger) SetLogLevel(level string) {
+	switch level {
+	case "debug":
+		l.logger.SetLevel(logrus.DebugLevel)
+	case "info":
+		l.logger.SetLevel(logrus.InfoLevel)
+	case "warn":
+		l.logger.SetLevel(logrus.WarnLevel)
+	case "error":
+		l.logger.SetLevel(logrus.ErrorLevel)
+	case "fatal":
+		l.logger.SetLevel(logrus.FatalLevel)
+	}
+}

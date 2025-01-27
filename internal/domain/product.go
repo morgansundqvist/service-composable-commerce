@@ -13,6 +13,18 @@ type ProductGroup struct {
 	IsSold bool      `json:"is_sold"`
 }
 
+type CreateProductGroupInput struct {
+	Name   string `json:"name"`
+	Order  int    `json:"order"`
+	IsSold bool   `json:"is_sold"`
+}
+
+type UpdateProductGroupInput struct {
+	Name   *string `json:"name"`
+	Order  *int    `json:"order"`
+	IsSold *bool   `json:"is_sold"`
+}
+
 type Product struct {
 	ID                         uuid.UUID  `json:"id"`
 	Name                       string     `json:"name"`
@@ -45,18 +57,6 @@ type UpdateProductInput struct {
 	ConfiguredByProductGroupID *uuid.UUID `json:"configured_by_product_group_id"`
 	ConfiguredQuantity         *int       `json:"configured_quantity"`
 	IsSoldSeparately           *bool      `json:"is_sold_separately"`
-}
-
-type CreateProductGroupInput struct {
-	Name   string `json:"name"`
-	Order  int    `json:"order"`
-	IsSold bool   `json:"is_sold"`
-}
-
-type UpdateProductGroupInput struct {
-	Name   *string `json:"name"`
-	Order  *int    `json:"order"`
-	IsSold *bool   `json:"is_sold"`
 }
 
 func CreateProduct(input CreateProductInput) (*Product, error) {
@@ -138,4 +138,9 @@ func (pg *ProductGroup) Update(input UpdateProductGroupInput) error {
 	}
 
 	return nil
+}
+
+type ProductGroupWithProducts struct {
+	ProductGroup ProductGroup `json:"product_group"`
+	Products     []Product    `json:"products"`
 }

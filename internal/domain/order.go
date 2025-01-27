@@ -36,8 +36,10 @@ type UpdateOrderInput struct {
 
 func CreateOrder(input CreateOrderInput) (*Order, error) {
 	order := &Order{
+		ID:              uuid.New(),
 		SessionId:       input.SessionId,
 		CreatedDateTime: time.Now(),
+		Status:          "created",
 	}
 
 	return order, nil

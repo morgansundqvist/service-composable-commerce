@@ -3,6 +3,7 @@ package adapters
 import (
 	"github.com/google/uuid"
 	"github.com/morgansundqvist/service-composable-commerce/internal/domain"
+	"github.com/morgansundqvist/service-composable-commerce/internal/ports"
 	"gorm.io/gorm"
 )
 
@@ -26,10 +27,11 @@ type DBProductGroup struct {
 }
 
 type GormSLProductRepository struct {
-	db *gorm.DB
+	db     *gorm.DB
+	logger ports.Logger
 }
 
-func NewGormSLProductRepository(db *gorm.DB) *GormSLProductRepository {
+func NewGormSLProductRepository(db *gorm.DB, logger ports.Logger) *GormSLProductRepository {
 	db.AutoMigrate(&DBProduct{}, &DBProductGroup{})
 	return &GormSLProductRepository{db: db}
 }
@@ -150,4 +152,46 @@ func (r *GormSLProductRepository) ListProductGroups() ([]domain.ProductGroup, er
 		productGroups[i] = *toDomainProductGroup(&dbProductGroup)
 	}
 	return productGroups, nil
+}
+
+func (r *GormSLProductRepository) ListProductsByProductGroupID(productGroupID uuid.UUID) ([]domain.Product, error) {
+	var dbProducts []DBProduct
+	err := r.db.Where("product_group_id = ?", productGroupID).Find(&dbProducts).Error
+	if err != nil {
+		return nil, err
+	}
+	products := make([]domain.Product, len(dbProducts))
+	for i, dbProduct := range dbProducts {
+		products[i] = *toDomainProduct(&dbProduct)
+	}
+	return products, nil
+}
+
+func (r *GormSLProductRepository) ListProductGroupsWithProducts() ([]domain.ProductGroupWithProducts, error) {
+	var dbProductGroups []DBProductGroup
+	err := r.db.Where("is_sold = ?", true).Order("\"order\" asc").Find(&dbProductGroups).Error
+	if err != nil {
+		return nil, err
+	}
+
+	var productGroupsWithProducts []domain.ProductGroupWithProducts
+	for _, dbProductGroup := range dbProductGroups {
+		var dbProducts []DBProduct
+		err := r.db.Where("product_group_id = ? AND is_sold_separately = ?", dbProductGroup.ID, true).Find(&dbProducts).Error
+		if err != nil {
+			return nil, err
+		}
+
+		products := make([]domain.Product, len(dbProducts))
+		for i, dbProduct := range dbProducts {
+			products[i] = *toDomainProduct(&dbProduct)
+		}
+
+		productGroupsWithProducts = append(productGroupsWithProducts, domain.ProductGroupWithProducts{
+			ProductGroup: *toDomainProductGroup(&dbProductGroup),
+			Products:     products,
+		})
+	}
+
+	return productGroupsWithProducts, nil
 }

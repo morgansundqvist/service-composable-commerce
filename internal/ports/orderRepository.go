@@ -19,4 +19,5 @@ type OrderRepository interface {
 	GetOrderBySessionId(sessionId string) (*domain.Order, error)
 	GetOrderLinesByOrderId(orderId uuid.UUID) ([]*domain.OrderLine, error)
 	GetOrderLineContentLinesByOrderLineId(orderLineId uuid.UUID) ([]*domain.OrderLineContentLine, error)
+	GetOrderByStatus(status string) ([]*domain.Order, error)
 }

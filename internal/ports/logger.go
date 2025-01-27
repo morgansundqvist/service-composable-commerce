@@ -11,4 +11,7 @@ type Logger interface {
 	Error(msg string, fields map[string]interface{})
 	// Fatal logs a message at level Fatal with fields and then calls os.Exit(1).
 	Fatal(msg string, fields map[string]interface{})
+
+	// SetLogLevel sets the log level.
+	SetLogLevel(level string)
 }

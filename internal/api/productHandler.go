@@ -2,6 +2,7 @@ package api
 
 import (
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"github.com/morgansundqvist/service-composable-commerce/internal/application"
 	"github.com/morgansundqvist/service-composable-commerce/internal/domain"
 )
@@ -127,4 +128,22 @@ func (h *ProductHandler) DeleteProduct(c *fiber.Ctx) error {
 	}
 
 	return c.SendStatus(fiber.StatusNoContent)
+}
+
+func (h *ProductHandler) GetProductsByProductGroupID(c *fiber.Ctx) error {
+	id := c.Params("id")
+	uuidId, err := uuid.Parse(id)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+	products, err := h.productService.GetProductsByProductGroupID(uuidId)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	return c.JSON(products)
 }

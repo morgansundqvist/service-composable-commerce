@@ -1,0 +1,12 @@
+{{define "content"}}
+<h2>Welcome to the Commerce Platform</h2>
+<p>Explore our products below:</p>
+{{range .ProductGroups}}
+    <h3>{{.ProductGroup.Name}}</h3>
+    <ul>
+        {{range .Products}}
+        <li>{{.Name}} - {{call $.FormatPrice .Price}} kr</li>
+        {{end}}
+    </ul>
+{{end}}
+{{end}}

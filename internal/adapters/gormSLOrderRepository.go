@@ -204,3 +204,15 @@ func (r *GormSLOrderRepository) GetOrderLineContentLinesByOrderLineId(orderLineI
 	}
 	return contentLines, nil
 }
+
+func (r *GormSLOrderRepository) GetOrderByStatus(status string) ([]*domain.Order, error) {
+	var dbOrders []DBOrder
+	if err := r.db.Where("status = ?", status).Find(&dbOrders).Error; err != nil {
+		return nil, err
+	}
+	orders := make([]*domain.Order, len(dbOrders))
+	for i, dbOrder := range dbOrders {
+		orders[i] = toDomainOrder(&dbOrder)
+	}
+	return orders, nil
+}
